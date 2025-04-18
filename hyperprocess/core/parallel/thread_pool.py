@@ -4,27 +4,32 @@ Thread Pool implementation for HyperProcess.
 Provides a high-level, context-managed API for threading
 using ThreadPoolExecutor under the hood.
 """
+import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, Future
 from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar, List
-from collections.abc import Sized
 from contextlib import AbstractContextManager
+from concurrent.futures import ProcessPoolExecutor
+from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar
+from multiprocessing import get_context, cpu_count
 
+_T = TypeVar("_T")
 T = TypeVar("T")
 R = TypeVar("R")
 
 
-class ThreadPool(ThreadPoolExecutor, AbstractContextManager):
+class ThreadPool(ThreadPoolExecutor):
     """
     A context-managed thread pool supporting sync and async map/apply.
     """
 
-    def __init__(
-        self,
-        max_workers: Optional[int] = None,
-        initializer: Optional[Callable] = None,
-        initargs: tuple = ()
-    ):
-        super().__init__(max_workers=max_workers, initializer=initializer, initargs=initargs)
+    def __init__(self,
+                 max_workers: int | None = None,
+                 initializer: Callable[[], None] | None = None,
+                 initargs: tuple = ()):
+        super().__init__(max_workers=max_workers,
+                         initializer=initializer,
+                         initargs=initargs)
+        self._maxtasks = maxtasksperchild
 
     def __enter__(self) -> "ThreadPool":
         return self
@@ -38,17 +43,18 @@ class ThreadPool(ThreadPoolExecutor, AbstractContextManager):
         # Ensure clean shutdown
         self.shutdown(wait=True)
 
+
     def map(
         self,
-        func: Callable[[T], R],
-        iterable: Iterable[T],
-        timeout: Optional[float] = None,
-        chunksize: Optional[int] = None
-    ) -> List[R]:
-        """
-        Synchronous map with optional timeout.
-        """
-        return list(super().map(func, iterable, timeout=timeout ,chunksize=))
+        fn: Callable[..., _T],
+        *iterables: Iterable[Any],
+        timeout: float | None = None,
+        chunksize: int = 1
+    ) -> Iterator[_T]:
+        """Match Executor.map signature exactly."""
+        return super().map(fn, *iterables,
+                           timeout=timeout,
+                           chunksize=chunksize)
 
     def map_async(
         self,
@@ -61,8 +67,8 @@ class ThreadPool(ThreadPoolExecutor, AbstractContextManager):
         Asynchronous map: returns a Future whose result() is the list.
         Optionally execute a callback once done.
         """
-        future = super().submit(lambda data: list(data),
-                                super().map(func, iterable, timeout=timeout))
+        future = super().submit(lambda seq: list(
+            seq), super().map(func, iterable, timeout=timeout))
         if callback:
             future.add_done_callback(lambda fut: callback(fut.result()))
         return future
@@ -77,7 +83,7 @@ class ThreadPool(ThreadPoolExecutor, AbstractContextManager):
         """
         Synchronous apply: runs func(*args, **kwargs) in a worker thread.
         """
-        return self.apply_async(func, *args, **kwargs).result(timeout)
+        return self.apply_async(func, *args, timeout=timeout, **kwargs).result(timeout)
 
     def apply_async(
         self,

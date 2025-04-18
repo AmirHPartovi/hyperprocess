@@ -10,7 +10,14 @@ from multiprocessing import get_context, cpu_count
 from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar, List
 from collections.abc import Sized
 from contextlib import AbstractContextManager
+from concurrent.futures import ProcessPoolExecutor
+from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar
+from multiprocessing import get_context, cpu_count
+from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import get_context, cpu_count
+from typing import Optional, Callable, Iterable, Iterator, Any
 
+_T = TypeVar("_T")
 T = TypeVar("T")
 R = TypeVar("R")
 
@@ -28,17 +35,17 @@ class Pool(ProcessPoolExecutor, AbstractContextManager):
         maxtasksperchild: Optional[int] = None,
         start_method: str = 'spawn'
     ):
-        # Determine number of workers
-        self._max_workers = processes or cpu_count()
-        # Obtain a multiprocessing context
+        self._processes  = processes or cpu_count()
         ctx = get_context(start_method)
+        
         super().__init__(
-            max_workers=self._max_workers,
+            max_workers=self._processes,
             mp_context=ctx,
             initializer=initializer,
             initargs=initargs
         )
         self._maxtasks = maxtasksperchild
+\
 
     def __enter__(self) -> "Pool":
         return self
@@ -52,19 +59,21 @@ class Pool(ProcessPoolExecutor, AbstractContextManager):
         # Ensure clean shutdown
         self.shutdown(wait=True)
 
+
     def map(
         self,
-        func: Callable[..., R],
-        iterable: Iterable[T],
-        timeout: Optional[float] = None,
-        chunksize: Optional[int] = 1
-    ) -> List[R]:
+        fn: Callable[..., _T],
+        *iterables: Iterable[Any],
+        timeout: float | None = None,
+        chunksize: int = 1
+    ) -> Iterator[_T]:
         """
-        Synchronous map with optional timeout and chunk sizing.
-        """
-        if chunksize is None:
-            chunksize = _calculate_chunksize(iterable, self._max_workers)
-        return list(super().map(func, iterable, timeout=timeout, chunksize=chunksize))
+            Exactly the same signature as Executor.map,
+            but delegates to super().map() using our context.
+            """
+        return super().map(fn, *iterables,
+                           timeout=timeout,
+                           chunksize=chunksize)
 
     def map_async(
         self,
@@ -80,12 +89,10 @@ class Pool(ProcessPoolExecutor, AbstractContextManager):
         """
         if chunksize is None:
             chunksize = _calculate_chunksize(iterable, self._max_workers)
-        future = super().submit(lambda data: list(data),
-                                super().map(func, iterable, timeout=timeout))
+        future = super().submit(lambda seq: list(seq), super().map(
+            func, iterable, timeout=timeout, chunksize=chunksize))
         if callback:
-            def _on_complete(fut: Future):
-                callback(fut.result())
-            future.add_done_callback(_on_complete)
+            future.add_done_callback(lambda fut: callback(fut.result()))
         return future
 
     def apply(
@@ -98,7 +105,7 @@ class Pool(ProcessPoolExecutor, AbstractContextManager):
         """
         Synchronous apply: runs func(*args, **kwargs) in a worker.
         """
-        return self.apply_async(func, *args, **kwargs).result(timeout)
+        return self.apply_async(func, *args, timeout=timeout, **kwargs).result(timeout)
 
     def apply_async(
         self,
@@ -120,14 +127,11 @@ class Pool(ProcessPoolExecutor, AbstractContextManager):
     def imap_unordered(
         self,
         func: Callable[[T], R],
-        iterable: Iterable[T],
-        chunksize: Optional[int] = None
+        iterable: Iterable[T]
     ) -> Iterator[R]:
         """
         Iterator yielding results as soon as they are ready (unordered).
         """
-        # Use underlying ProcessPoolExecutor's map to drive order,
-        # but unwrap futures to yield in completion order.
         futures = [self.submit(func, item) for item in iterable]
         for fut in concurrent.futures.as_completed(futures):
             yield fut.result()
