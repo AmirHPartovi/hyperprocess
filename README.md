@@ -75,11 +75,39 @@ result = accelerated_function(data)
 
 ```
 hyperprocess/
-├── core/                      # Core functionality
-├── pool/                      # Pool implementations
-├── integration/              # Library integrations
-├── tests/                    # Unit tests
-└── docs/                     # Documentation
+├── core/
+│   ├── cpu/
+│   │   ├── compute.c
+│   │   ├── compute.py
+│   │   └── compute.pyx
+│   ├── io/
+│   │   └── io_utils.py
+│   ├── parallel/
+│   │   ├── process_pool.py
+│   │   └── thread_pool.py
+│   ├── connection.py
+│   ├── forking.py
+│   ├── heap.py
+│   ├── managers.py
+│   ├── patch.py
+│   ├── process.py
+│   ├── queue.py
+│   ├── reduction.py
+│   ├── shared_ctype.py
+│   ├── shared_memory.py
+│   ├── sync.py
+│   └── util.py
+├── integration/
+│   ├── cgal_integration.py
+│   ├── networkx_integration.py
+│   ├── numpy_integration.py
+│   ├── pandas_integration.py
+│   └── sklearn_integration.py
+├── tests/
+├── docs/
+├── __init__.py
+├── api.py
+└── decorators.py
 ```
 
 ## 📄 License
