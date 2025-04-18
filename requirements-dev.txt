@@ -1,0 +1,8 @@
+cython
+pytest
+numpy
+pandas
+scikit-learn
+setuptools
+coverage
+pytest-cov

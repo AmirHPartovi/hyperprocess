@@ -1,0 +1,19 @@
+[project]
+name = "HyperProcess"
+version = "0.1.0"
+description = "A modern, high-performance multiprocessing framework for Python"
+authors = [{ name="Amir Hossein Partovi", email="a.partovi99@gmail.com" }]
+dependencies = [
+	"typing>=3.7.4",
+	"setuptools>=42.0.0"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+addopts = "--cov=myhpcpkg --cov-report=term-missing --cov-report=xml"
+testpaths = [
+    "tests"
+]
