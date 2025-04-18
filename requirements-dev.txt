@@ -6,3 +6,4 @@ scikit-learn
 setuptools
 coverage
 pytest-cov
+twine

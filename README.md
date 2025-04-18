@@ -1,8 +1,11 @@
 # HyperProcess
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badgeLicense-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)![coverage](https://codecov.io/gh/AmirHPartovi/hyperprocess/branch/main/graph/badge.svg)
-
+[![Build Status](https://github.com/YOUR_USERNAME/hyperprocess/actions/workflows/build.yml/badge.svg)](https://github.com/YOUR_USERNAME/hyperprocess/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/YOUR_USERNAME/hyperprocess/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_USERNAME/hyperprocess)
+[![PyPI version](https://badge.fury.io/py/hyperprocess.svg)](https://badge.fury.io/py/hyperprocess)
+[![License](https://img.shields.io/github/license/AmirHPartovi/hyperprocess.svg)](https://github.com/AmirHPartovi/hyperprocess/blob/main/LICENSE)
 
 A high-performance Python package for parallel processing and optimization, designed to accelerate CPU-bound and I/O-bound tasks. HyperProcess provides seamless integration with NumPy, pandas, and scikit-learn while offering both thread-based and process-based parallelism.
 
@@ -96,4 +99,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For inquiries, please reach out at: [Your Email]
 
 ---
+
 Made with ❤️ by [Your Name]
