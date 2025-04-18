@@ -1,0 +1,41 @@
+---
+config:
+  layout: elk
+  theme: neo-dark
+  look: neo
+---
+flowchart TD
+    subgraph core["Core Functionality"]
+        B[/"Compute Module"/]
+        C[/IO Utilities/]
+        D[/"Process Pool"/]
+        E[/Thread Pool/]
+        F[/Queue System/]
+        G[/Manager Utils/]
+        H[/Synchronization/]
+        I[/Shared Memory/]
+        J[/Reduction Algorithms/]
+        K[/Heap Operations/]
+        L[/Forking Mechanism/]
+        M[/Connection Handling/]
+        N[/Patch Management/]
+        O[/Utility Functions/]
+        P[/Process Management/]
+    end
+    
+    subgraph integration["Integration Modules"]
+        R[(Numpy Integration)]
+        S[(Pandas Integration)]
+        T[(Scikit-learn Integration)]
+        U[(NetworkX Integration)]
+        V[(CGAL Integration)]
+    end
+    
+    A[(API Interface)] -->|Calls| B & C & D & E & F & G
+    A -->|Uses| H & I & J & K & L & M & N & O & P
+    A -->|Calls Decorators| Q{Decorators Module}
+    A -->|Provides Integration API to| R & S & T & U & V
+    
+    style A fill:#f9c,stroke:#333,stroke-width:4px
+    style core fill:#bbf,stroke:#7f7,stroke-width:2px,color:#fff,stroke-dasharray:5 5
+    style integration fill:#ccf,stroke:#77f,stroke-width:2px
