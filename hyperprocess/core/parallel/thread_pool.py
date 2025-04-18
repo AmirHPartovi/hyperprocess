@@ -6,30 +6,31 @@ using ThreadPoolExecutor under the hood.
 """
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, Future
-from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar, List
+from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar, List, Tuple
 from contextlib import AbstractContextManager
-from concurrent.futures import ProcessPoolExecutor
-from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar
-from multiprocessing import get_context, cpu_count
 
+# Define type variables
 _T = TypeVar("_T")
 T = TypeVar("T")
 R = TypeVar("R")
 
 
-class ThreadPool(ThreadPoolExecutor):
+class ThreadPool(ThreadPoolExecutor, AbstractContextManager):
     """
     A context-managed thread pool supporting sync and async map/apply.
     """
 
-    def __init__(self,
-                 max_workers: int | None = None,
-                 initializer: Callable[[], None] | None = None,
-                 initargs: tuple = ()):
-        super().__init__(max_workers=max_workers,
-                         initializer=initializer,
-                         initargs=initargs)
-        self._maxtasks = maxtasksperchild
+    def __init__(
+        self,
+        max_workers: Optional[int] = None,
+        initializer: Optional[Callable[..., None]] = None,
+        initargs: Tuple[Any, ...] = ()
+    ):
+        super().__init__(
+            max_workers=max_workers,
+            initializer=initializer,
+            initargs=initargs
+        )
 
     def __enter__(self) -> "ThreadPool":
         return self
@@ -42,7 +43,6 @@ class ThreadPool(ThreadPoolExecutor):
     ) -> None:
         # Ensure clean shutdown
         self.shutdown(wait=True)
-
 
     def map(
         self,

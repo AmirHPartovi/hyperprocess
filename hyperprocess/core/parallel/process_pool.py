@@ -4,22 +4,26 @@ Process Pool implementation for HyperProcess.
 Provides a high-level, context-managed API for multiprocessing
 using ProcessPoolExecutor under the hood.
 """
-import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor, Future
+import concurrent.futures
 from multiprocessing import get_context, cpu_count
-from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar, List
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    Optional,
+    TypeVar,
+    List,
+    Tuple
+)
 from collections.abc import Sized
 from contextlib import AbstractContextManager
-from concurrent.futures import ProcessPoolExecutor
-from typing import Any, Callable, Iterable, Iterator, Optional, TypeVar
-from multiprocessing import get_context, cpu_count
-from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import get_context, cpu_count
-from typing import Optional, Callable, Iterable, Iterator, Any
 
-_T = TypeVar("_T")
-T = TypeVar("T")
-R = TypeVar("R")
+# Define type variables
+T = TypeVar('T')
+R = TypeVar('R')
+_T = TypeVar('_T')
 
 
 class Pool(ProcessPoolExecutor, AbstractContextManager):
@@ -30,22 +34,29 @@ class Pool(ProcessPoolExecutor, AbstractContextManager):
     def __init__(
         self,
         processes: Optional[int] = None,
-        initializer: Optional[Callable] = None,
-        initargs: tuple = (),
-        maxtasksperchild: Optional[int] = None,
+        initializer: Optional[Callable[..., Any]] = None,
+        initargs: Tuple[Any, ...] = (),
+        max_tasks_per_child: Optional[int] = None,
         start_method: str = 'spawn'
     ):
-        self._processes  = processes or cpu_count()
+        """
+        Custom ProcessPoolExecutor with support for initializer and initargs.
+
+        :param processes: Number of worker processes to use. Defaults to the number of CPU cores.
+        :param initializer: A callable invoked by each worker process when it starts.
+        :param initargs: A tuple of arguments passed to the initializer.
+        :param max_tasks_per_child: Maximum number of tasks a worker process can execute before it will exit and be replaced.
+        :param start_method: Method used to start the worker processes. Common values are 'fork', 'spawn', or 'forkserver'.
+        """
+        max_workers = processes or cpu_count()
         ctx = get_context(start_method)
-        
         super().__init__(
-            max_workers=self._processes,
+            max_workers=max_workers,
             mp_context=ctx,
             initializer=initializer,
-            initargs=initargs
+            initargs=initargs,
+            max_tasks_per_child=max_tasks_per_child
         )
-        self._maxtasks = maxtasksperchild
-\
 
     def __enter__(self) -> "Pool":
         return self
@@ -59,21 +70,23 @@ class Pool(ProcessPoolExecutor, AbstractContextManager):
         # Ensure clean shutdown
         self.shutdown(wait=True)
 
-
     def map(
         self,
         fn: Callable[..., _T],
         *iterables: Iterable[Any],
-        timeout: float | None = None,
+        timeout: Optional[float] = None,
         chunksize: int = 1
     ) -> Iterator[_T]:
         """
-            Exactly the same signature as Executor.map,
-            but delegates to super().map() using our context.
-            """
-        return super().map(fn, *iterables,
-                           timeout=timeout,
-                           chunksize=chunksize)
+        Apply a function to every item of the given iterables, yielding the results.
+
+        :param fn: The function to apply to the items.
+        :param iterables: One or more iterable arguments that supply the data to process.
+        :param timeout: The maximum number of seconds to wait. If None, then there is no limit.
+        :param chunksize: The size of the chunks the iterable will be split into and submitted to the process pool.
+        :return: An iterator equivalent to map(fn, *iterables) but the calls may be evaluated out-of-order.
+        """
+        return super().map(fn, *iterables, timeout=timeout, chunksize=chunksize)
 
     def map_async(
         self,
